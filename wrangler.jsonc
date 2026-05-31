@@ -21,8 +21,9 @@
     }
   ]
 
-  // Secrets (set via `wrangler secret put`):
+  // Secrets (set via `wrangler secret put` or `wrangler secret bulk`):
   // - LINKEDIN_CLIENT_ID
   // - LINKEDIN_CLIENT_SECRET
   // - LINKEDIN_REFRESH_TOKEN
+  // - MCP_AUTH_TOKEN  (gates the /mcp and /sse endpoints; see DEPLOYMENT.md)
 }

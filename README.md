@@ -4,6 +4,8 @@ A Model Context Protocol (MCP) server for managing LinkedIn Ads accounts, deploy
 
 Exposes 24 tools covering account discovery, campaigns, creatives, analytics, demographics, conversions, lead gen, and audience management. Access is governed by your LinkedIn OAuth token — the server can only reach accounts the token is authorised for.
 
+> **Want to deploy your own instance?** See [DEPLOYMENT.md](DEPLOYMENT.md) for a full end-to-end setup guide (LinkedIn app → OAuth → Cloudflare deploy → MCP client wiring).
+
 ## Architecture
 
 - **Cloudflare Worker** (`src/index.ts`) — HTTP entrypoint exposing `/mcp` (streamable HTTP) and `/sse` (SSE) transports
