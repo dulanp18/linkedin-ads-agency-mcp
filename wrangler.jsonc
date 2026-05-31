@@ -1,0 +1,28 @@
+{
+  "name": "linkedin-ads-agency-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Durable Objects for stateful MCP sessions
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MCP_OBJECT",
+        "class_name": "LinkedInAdsMCP"
+      }
+    ]
+  },
+
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["LinkedInAdsMCP"]
+    }
+  ]
+
+  // Secrets (set via `wrangler secret put`):
+  // - LINKEDIN_CLIENT_ID
+  // - LINKEDIN_CLIENT_SECRET
+  // - LINKEDIN_REFRESH_TOKEN
+}
