@@ -38,12 +38,24 @@ This starts a local server on port 3333, opens an OAuth consent flow, and prints
 
 > The redirect URI `http://localhost:3333/callback` must be registered on your LinkedIn app's auth settings.
 
+## Authentication
+
+The MCP endpoints are gated by a path-based bearer token. Generate one with `openssl rand -hex 32` and set it as `MCP_AUTH_TOKEN` in `.dev.vars` (and as a Cloudflare secret for production).
+
+Client connection URLs include the token:
+```
+https://<worker-host>/mcp/<MCP_AUTH_TOKEN>
+https://<worker-host>/sse/<MCP_AUTH_TOKEN>
+```
+
+Anything else returns `404 Not Found`. Token comparison is constant-time.
+
 ## Local development
 
 ```bash
 npm run dev
 ```
-Worker is available at `http://localhost:8787`. Connect an MCP client to `http://localhost:8787/mcp` or `http://localhost:8787/sse`.
+Worker is available at `http://localhost:8787`. Connect an MCP client to `http://localhost:8787/mcp/<MCP_AUTH_TOKEN>` or `http://localhost:8787/sse/<MCP_AUTH_TOKEN>`.
 
 ## Type checking
 
@@ -58,6 +70,7 @@ Set production secrets:
 npx wrangler secret put LINKEDIN_CLIENT_ID
 npx wrangler secret put LINKEDIN_CLIENT_SECRET
 npx wrangler secret put LINKEDIN_REFRESH_TOKEN
+npx wrangler secret put MCP_AUTH_TOKEN
 ```
 
 Deploy:

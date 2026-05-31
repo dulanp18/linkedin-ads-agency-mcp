@@ -5,6 +5,7 @@ export interface Env {
   LINKEDIN_CLIENT_ID: string;
   LINKEDIN_CLIENT_SECRET: string;
   LINKEDIN_REFRESH_TOKEN: string;
+  MCP_AUTH_TOKEN: string;
 }
 
 // ==================== LinkedIn OAuth ====================

@@ -2785,6 +2785,15 @@ function getDefaultStartDate(): string {
 
 // ==================== Worker Entry ====================
 
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
 export default {
   async fetch(
     request: Request,
@@ -2800,10 +2809,6 @@ export default {
           version: "1.0.0",
           description:
             "MCP server for managing LinkedIn Ads across multiple client accounts",
-          endpoints: {
-            mcp: "/mcp",
-            sse: "/sse",
-          },
         }),
         {
           headers: { "Content-Type": "application/json" },
@@ -2811,12 +2816,24 @@ export default {
       );
     }
 
-    if (url.pathname === "/mcp" || url.pathname.startsWith("/mcp/")) {
-      return LinkedInAdsMCP.serve("/mcp").fetch(request, env, ctx);
+    if (!env.MCP_AUTH_TOKEN) {
+      return new Response("Server misconfigured", { status: 500 });
     }
 
-    if (url.pathname === "/sse" || url.pathname.startsWith("/sse/")) {
-      return LinkedInAdsMCP.serveSSE("/sse").fetch(request, env, ctx);
+    const match = url.pathname.match(/^\/(mcp|sse)\/([^/]+)(\/.*)?$/);
+    if (match) {
+      const [, transport, providedToken, rest = ""] = match;
+      if (!timingSafeEqual(providedToken, env.MCP_AUTH_TOKEN)) {
+        return new Response("Not Found", { status: 404 });
+      }
+      const rewrittenUrl = new URL(url);
+      rewrittenUrl.pathname = `/${transport}${rest}`;
+      const rewritten = new Request(rewrittenUrl.toString(), request);
+
+      if (transport === "mcp") {
+        return LinkedInAdsMCP.serve("/mcp").fetch(rewritten, env, ctx);
+      }
+      return LinkedInAdsMCP.serveSSE("/sse").fetch(rewritten, env, ctx);
     }
 
     return new Response("Not Found", { status: 404 });
