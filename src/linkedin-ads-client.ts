@@ -123,7 +123,7 @@ export class LinkedInAdsClient {
             queryParts.push(
               `${key}=List(${value.map((v) => encodeURIComponent(v)).join(",")})`
             );
-          } else if (key === "fields" || key === "dateRange") {
+          } else if (key === "fields" || key === "dateRange" || key === "search") {
             queryParts.push(`${key}=${value}`);
           } else {
             queryParts.push(`${key}=${encodeURIComponent(String(value))}`);
@@ -227,6 +227,29 @@ export class LinkedInAdsClient {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  /**
+   * Builds a Rest.li 2.0 nested `search` finder parameter from a set of
+   * criteria. Structural characters ( ) , : are left literal; each value is
+   * URL-encoded (so URN colons become %3A). Criteria with no values are skipped.
+   * Returns undefined when there are no criteria to apply.
+   *
+   * Example:
+   *   { status: ["ACTIVE"], campaignGroup: ["urn:li:sponsoredCampaignGroup:123"] }
+   *   => "(status:(values:List(ACTIVE)),campaignGroup:(values:List(urn%3Ali%3AsponsoredCampaignGroup%3A123)))"
+   */
+  private buildSearchParam(
+    criteria: Record<string, string[] | undefined>
+  ): string | undefined {
+    const parts: string[] = [];
+    for (const [field, values] of Object.entries(criteria)) {
+      if (values?.length) {
+        const list = values.map((v) => encodeURIComponent(v)).join(",");
+        parts.push(`${field}:(values:List(${list}))`);
+      }
+    }
+    return parts.length ? `(${parts.join(",")})` : undefined;
+  }
+
   // ==================== Date Helpers ====================
 
   private formatDateRange(startDate: string, endDate?: string): string {
@@ -260,11 +283,12 @@ export class LinkedInAdsClient {
       q: "search",
     };
 
-    if (options.status?.length) {
-      params["search.status.values"] = options.status;
-    }
-    if (options.type) {
-      params["search.type.values"] = [options.type];
+    const search = this.buildSearchParam({
+      status: options.status,
+      type: options.type ? [options.type] : undefined,
+    });
+    if (search) {
+      params.search = search;
     }
 
     const response = await this.request<LinkedInApiResponse<AdAccount>>(
@@ -298,13 +322,14 @@ export class LinkedInAdsClient {
       q: "search",
     };
 
-    if (options.campaignGroupIds?.length) {
-      params["search.campaignGroup.values"] = options.campaignGroupIds.map(
+    const search = this.buildSearchParam({
+      campaignGroup: options.campaignGroupIds?.map(
         (id) => `urn:li:sponsoredCampaignGroup:${id}`
-      );
-    }
-    if (options.status?.length) {
-      params["search.status.values"] = options.status;
+      ),
+      status: options.status,
+    });
+    if (search) {
+      params.search = search;
     }
 
     try {
@@ -363,8 +388,9 @@ export class LinkedInAdsClient {
       q: "search",
     };
 
-    if (options.status?.length) {
-      params["search.status.values"] = options.status;
+    const search = this.buildSearchParam({ status: options.status });
+    if (search) {
+      params.search = search;
     }
 
     const response = await this.request<LinkedInApiResponse<CampaignGroup>>(
