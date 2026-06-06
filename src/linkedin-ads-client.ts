@@ -123,7 +123,12 @@ export class LinkedInAdsClient {
             queryParts.push(
               `${key}=List(${value.map((v) => encodeURIComponent(v)).join(",")})`
             );
-          } else if (key === "fields" || key === "dateRange" || key === "search") {
+          } else if (
+            key === "fields" ||
+            key === "dateRange" ||
+            key === "search" ||
+            key === "owner"
+          ) {
             queryParts.push(`${key}=${value}`);
           } else {
             queryParts.push(`${key}=${encodeURIComponent(String(value))}`);
@@ -718,9 +723,14 @@ export class LinkedInAdsClient {
     accountId: string,
     status?: string[]
   ): Promise<LeadGenForm[]> {
+    // Rest.li 2.0 finder: structural ( ) : stay literal, the URN value is
+    // URL-encoded. Routed through the raw passthrough in request().
+    const ownerUrn = encodeURIComponent(
+      `urn:li:sponsoredAccount:${accountId}`
+    );
     const params: Record<string, string | string[]> = {
       q: "owner",
-      owner: `(sponsoredAccount:urn:li:sponsoredAccount:${accountId})`,
+      owner: `(sponsoredAccount:${ownerUrn})`,
     };
 
     const response = await this.request<LinkedInApiResponse<LeadGenForm>>(
