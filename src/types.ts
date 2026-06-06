@@ -6,6 +6,9 @@ export interface Env {
   LINKEDIN_CLIENT_SECRET: string;
   LINKEDIN_REFRESH_TOKEN: string;
   MCP_AUTH_TOKEN: string;
+  // When set, the server only operates on this single ad account; any request
+  // for a different account is rejected. Leave unset for unrestricted access.
+  ALLOWED_ACCOUNT_ID?: string;
 }
 
 // ==================== LinkedIn OAuth ====================

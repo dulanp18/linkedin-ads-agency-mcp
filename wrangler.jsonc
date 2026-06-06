@@ -26,4 +26,7 @@
   // - LINKEDIN_CLIENT_SECRET
   // - LINKEDIN_REFRESH_TOKEN
   // - MCP_AUTH_TOKEN  (gates the /mcp and /sse endpoints; see DEPLOYMENT.md)
+  // - ALLOWED_ACCOUNT_ID  (optional; when set, locks the server to a single ad
+  //   account — every tool rejects any other account id and list_accounts only
+  //   returns the allowed one. Leave unset for unrestricted access.)
 }
