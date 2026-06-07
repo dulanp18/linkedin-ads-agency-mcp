@@ -116,7 +116,7 @@ only ever returns the allowed account. Leave it unset for unrestricted access
 to all accounts the OAuth token can reach.
 
 ```
-ALLOWED_ACCOUNT_ID=<numeric ad account id, e.g. 500706445>
+ALLOWED_ACCOUNT_ID=<numeric ad account id, e.g. 123456789>
 ```
 
 For production, set it as a Cloudflare secret alongside the others in Step 7b:
