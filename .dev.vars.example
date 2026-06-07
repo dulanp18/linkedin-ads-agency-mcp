@@ -3,4 +3,4 @@ LINKEDIN_CLIENT_SECRET=your-linkedin-client-secret
 LINKEDIN_REFRESH_TOKEN=your-refresh-token-here
 MCP_AUTH_TOKEN=generate-with-openssl-rand-hex-32
 # Optional: lock the server to a single ad account (rejects all others).
-# ALLOWED_ACCOUNT_ID=500706445
+# ALLOWED_ACCOUNT_ID=123456789
