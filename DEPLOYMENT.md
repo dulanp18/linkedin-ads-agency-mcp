@@ -108,6 +108,23 @@ LINKEDIN_REFRESH_TOKEN=<from Step 4>
 MCP_AUTH_TOKEN=<from Step 3>
 ```
 
+### Optional — lock the server to a single ad account
+
+Add `ALLOWED_ACCOUNT_ID` to restrict the entire server to one LinkedIn ad
+account. When set, every tool rejects any other account id and `list_accounts`
+only ever returns the allowed account. Leave it unset for unrestricted access
+to all accounts the OAuth token can reach.
+
+```
+ALLOWED_ACCOUNT_ID=<numeric ad account id, e.g. 500706445>
+```
+
+For production, set it as a Cloudflare secret alongside the others in Step 7b:
+
+```bash
+npx wrangler secret put ALLOWED_ACCOUNT_ID
+```
+
 ---
 
 ## Step 6 — Test locally

@@ -76,6 +76,23 @@ export class LinkedInAdsClient {
     this.env = env;
   }
 
+  // ==================== Account Restriction ====================
+
+  /**
+   * When ALLOWED_ACCOUNT_ID is configured, this server is locked to a single
+   * ad account. Throws before any LinkedIn call if a different account is
+   * requested. No-op when the env var is unset (unrestricted mode).
+   */
+  private requireAllowedAccount(accountId: string): void {
+    const allowed = this.env.ALLOWED_ACCOUNT_ID;
+    if (allowed && accountId !== allowed) {
+      throw new Error(
+        `Access restricted: this server is limited to ad account ${allowed}. ` +
+          `Requested account ${accountId} is not permitted.`
+      );
+    }
+  }
+
   // ==================== Auth ====================
 
   private async getAccessToken(): Promise<string> {
@@ -307,10 +324,19 @@ export class LinkedInAdsClient {
       accounts = accounts.filter((account) => !account.test);
     }
 
+    // When restricted to a single account, never surface the others.
+    const allowed = this.env.ALLOWED_ACCOUNT_ID;
+    if (allowed) {
+      // LinkedIn returns the account id as a number at runtime; coerce to
+      // compare against the configured string id.
+      accounts = accounts.filter((account) => String(account.id) === allowed);
+    }
+
     return accounts;
   }
 
   async getAccountDetails(accountId: string): Promise<AdAccount> {
+    this.requireAllowedAccount(accountId);
     return this.request<AdAccount>(`/rest/adAccounts/${accountId}`);
   }
 
@@ -323,6 +349,7 @@ export class LinkedInAdsClient {
       status?: string[];
     } = {}
   ): Promise<Campaign[]> {
+    this.requireAllowedAccount(accountId);
     const params: Record<string, string | string[]> = {
       q: "search",
     };
@@ -353,6 +380,7 @@ export class LinkedInAdsClient {
     accountId: string,
     campaignId: string
   ): Promise<Campaign | null> {
+    this.requireAllowedAccount(accountId);
     try {
       return await this.request<Campaign>(
         `/rest/adAccounts/${accountId}/adCampaigns/${campaignId}`
@@ -367,6 +395,7 @@ export class LinkedInAdsClient {
     accountId: string,
     campaignIds: string[]
   ): Promise<Map<string, Campaign>> {
+    this.requireAllowedAccount(accountId);
     const campaignMap = new Map<string, Campaign>();
     const batchSize = 10;
 
@@ -389,6 +418,7 @@ export class LinkedInAdsClient {
     accountId: string,
     options: { status?: string[] } = {}
   ): Promise<CampaignGroup[]> {
+    this.requireAllowedAccount(accountId);
     const params: Record<string, string | string[]> = {
       q: "search",
     };
@@ -416,6 +446,7 @@ export class LinkedInAdsClient {
       pageSize?: number;
     } = {}
   ): Promise<Creative[]> {
+    this.requireAllowedAccount(accountId);
     const params: Record<string, string | string[]> = {
       q: "criteria",
       pageSize: String(options.pageSize ?? 100),
@@ -451,6 +482,7 @@ export class LinkedInAdsClient {
     accountId: string,
     creativeIds: string[]
   ): Promise<Map<string, Creative>> {
+    this.requireAllowedAccount(accountId);
     const creativeMap = new Map<string, Creative>();
     const batchSize = 50;
 
@@ -517,6 +549,7 @@ export class LinkedInAdsClient {
     campaignGroups?: string[];
     metrics?: string[];
   }): Promise<AnalyticsRecord[]> {
+    this.requireAllowedAccount(options.accountId);
     const dateRange = this.formatDateRange(
       options.startDate,
       options.endDate
@@ -699,6 +732,7 @@ export class LinkedInAdsClient {
     accountId: string,
     enabledOnly = false
   ): Promise<Conversion[]> {
+    this.requireAllowedAccount(accountId);
     const params: Record<string, string> = {
       q: "account",
       account: `urn:li:sponsoredAccount:${accountId}`,
@@ -723,6 +757,7 @@ export class LinkedInAdsClient {
     accountId: string,
     status?: string[]
   ): Promise<LeadGenForm[]> {
+    this.requireAllowedAccount(accountId);
     // Rest.li 2.0 finder: structural ( ) : stay literal, the URN value is
     // URL-encoded. Routed through the raw passthrough in request().
     const ownerUrn = encodeURIComponent(
@@ -752,6 +787,7 @@ export class LinkedInAdsClient {
     accountId: string,
     options: { status?: string[]; type?: string } = {}
   ): Promise<SavedAudience[]> {
+    this.requireAllowedAccount(accountId);
     const params: Record<string, string> = {
       q: "account",
       account: `urn:li:sponsoredAccount:${accountId}`,
@@ -786,6 +822,7 @@ export class LinkedInAdsClient {
       objectiveType?: string;
     }
   ): Promise<{ id: string }> {
+    this.requireAllowedAccount(accountId);
     return this.request<{ id: string }>(
       `/rest/adAccounts/${accountId}/adCampaignGroups`,
       {
@@ -803,6 +840,7 @@ export class LinkedInAdsClient {
     campaignGroupId: string,
     updates: Record<string, unknown>
   ): Promise<void> {
+    this.requireAllowedAccount(accountId);
     await this.request<void>(
       `/rest/adAccounts/${accountId}/adCampaignGroups/${campaignGroupId}`,
       {
@@ -818,6 +856,7 @@ export class LinkedInAdsClient {
     campaignGroupId: string,
     isDraft: boolean
   ): Promise<void> {
+    this.requireAllowedAccount(accountId);
     if (isDraft) {
       await this.request<void>(
         `/rest/adAccounts/${accountId}/adCampaignGroups/${campaignGroupId}`,
@@ -853,6 +892,7 @@ export class LinkedInAdsClient {
       politicalIntent?: string;
     }
   ): Promise<{ id: string }> {
+    this.requireAllowedAccount(accountId);
     const campaignGroupUrn = data.campaignGroup.startsWith("urn:")
       ? data.campaignGroup
       : `urn:li:sponsoredCampaignGroup:${data.campaignGroup}`;
@@ -875,6 +915,7 @@ export class LinkedInAdsClient {
     campaignId: string,
     updates: Record<string, unknown>
   ): Promise<void> {
+    this.requireAllowedAccount(accountId);
     await this.request<void>(
       `/rest/adAccounts/${accountId}/adCampaigns/${campaignId}`,
       {
@@ -890,6 +931,7 @@ export class LinkedInAdsClient {
     campaignId: string,
     isDraft: boolean
   ): Promise<void> {
+    this.requireAllowedAccount(accountId);
     if (isDraft) {
       await this.request<void>(
         `/rest/adAccounts/${accountId}/adCampaigns/${campaignId}`,
@@ -914,6 +956,7 @@ export class LinkedInAdsClient {
       leadgenCallToAction?: unknown;
     }
   ): Promise<{ id: string }> {
+    this.requireAllowedAccount(accountId);
     const body: Record<string, unknown> = {
       campaign: data.campaign.startsWith("urn:")
         ? data.campaign
@@ -946,6 +989,7 @@ export class LinkedInAdsClient {
       leadgenCallToAction?: { destination: string; label: string };
     }
   ): Promise<{ id: string }> {
+    this.requireAllowedAccount(accountId);
     const campaignUrn = data.campaign.startsWith("urn:")
       ? data.campaign
       : `urn:li:sponsoredCampaign:${data.campaign}`;
@@ -998,6 +1042,7 @@ export class LinkedInAdsClient {
     creativeId: string,
     updates: Record<string, unknown>
   ): Promise<void> {
+    this.requireAllowedAccount(accountId);
     const encodedId = encodeURIComponent(
       creativeId.startsWith("urn:")
         ? creativeId
